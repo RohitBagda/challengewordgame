@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "977828976448",
+    "firebase_url": "https://challenge-word-game-default-rtdb.firebaseio.com",
+    "project_id": "challenge-word-game",
+    "storage_bucket": "challenge-word-game.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:977828976448:android:d405b2ca5aed85a1d28ca5",
+        "android_client_info": {
+          "package_name": "com.rohitbagda.challenge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNvZFrVOHcY1Luc7vi0GmJKuJ9WEscFPc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
