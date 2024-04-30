@@ -16,7 +16,7 @@ import com.rohitbagda.challenge.ui.theme.ChallengewordgameTheme
 @Composable
 fun HomeScreen(
     navigateToJoinScreen: () -> Unit,
-    navigateToUsernameScreen: () -> Unit
+    navigateToGameRoomScreen: () -> Unit
 ) {
     Surface {
         Column(
@@ -24,7 +24,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Button(onClick = { navigateToUsernameScreen() }) {
+            Button(onClick = { navigateToGameRoomScreen() }) {
                 Text(text = "Host")
             }
             Button(onClick = { navigateToJoinScreen() }) {
@@ -40,7 +40,7 @@ fun HomeScreenPreview() {
     ChallengewordgameTheme {
         HomeScreen(
             navigateToJoinScreen = {},
-            navigateToUsernameScreen = {}
+            navigateToGameRoomScreen = {}
         )
     }
 }

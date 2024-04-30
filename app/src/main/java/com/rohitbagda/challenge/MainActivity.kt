@@ -17,18 +17,12 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = Route.HOME_SCREEN.value) {
                     composable(route = Route.HOME_SCREEN.value) {
                         HomeScreen(
-                            navigateToUsernameScreen = { navController.navigate(Route.USERNAME_SCREEN.value) },
-                            navigateToJoinScreen = { navController.navigate(Route.JOIN_SCREEN.value) }
+                            navigateToJoinScreen = { navController.navigate(Route.JOIN_SCREEN.value) },
+                            navigateToGameRoomScreen = { navController.navigate(Route.GAME_ROOM_SCREEN.value) }
                         )
                     }
                     composable(route = Route.JOIN_SCREEN.value) {
                         JoinScreen(
-                            navigateToUsernameScreen = { navController.navigate(Route.USERNAME_SCREEN.value) },
-                            navigateBack = { navController.popBackStack() }
-                        )
-                    }
-                    composable(route = Route.USERNAME_SCREEN.value) {
-                        UsernameScreen(
                             navigateToGameRoomScreen = { navController.navigate(Route.GAME_ROOM_SCREEN.value) },
                             navigateBack = { navController.popBackStack() }
                         )
@@ -47,6 +41,5 @@ class MainActivity : ComponentActivity() {
 enum class Route(val value: String) {
     HOME_SCREEN("homeScreen"),
     JOIN_SCREEN("joinScreen"),
-    USERNAME_SCREEN("usernameScreen"),
     GAME_ROOM_SCREEN("gameRoomScreen")
 }
