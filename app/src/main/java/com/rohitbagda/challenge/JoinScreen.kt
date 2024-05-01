@@ -32,12 +32,14 @@ import com.rohitbagda.challenge.ui.theme.ChallengewordgameTheme
 @Composable
 fun JoinScreen(
     navigateToGameRoomScreen: () -> Unit,
-    navigateBack: () -> Unit
+    navigateBack: () -> Unit,
+    viewModel: ChallengeViewModel
 ) {
     Surface {
         RoomCodeTextField(
             navigateToGameRoomScreen = navigateToGameRoomScreen,
-            navigateBack = navigateBack
+            navigateBack = navigateBack,
+            viewModel = viewModel
         )
     }
 }
@@ -45,7 +47,8 @@ fun JoinScreen(
 @Composable
 fun RoomCodeTextField(
     navigateToGameRoomScreen: () -> Unit,
-    navigateBack: () -> Unit
+    navigateBack: () -> Unit,
+    viewModel: ChallengeViewModel
 ) {
     var roomCode by rememberSaveable { mutableStateOf("rohit") }
     var roomCodeError by rememberSaveable { mutableStateOf(false) }
@@ -57,7 +60,7 @@ fun RoomCodeTextField(
         TextField(
             value = roomCode,
             onValueChange = {
-                roomCode = it.lowercase()
+                roomCode = it.uppercase()
                 validate(roomCode)
             },
             modifier = Modifier.width(300.dp),
@@ -100,17 +103,16 @@ fun RoomCodeTextField(
             Button(onClick = { navigateBack() }) {
                 Text(text = "Back")
             }
-            Button(onClick = { if (!roomCodeError) navigateToGameRoomScreen() }) {
+            Button(
+                onClick = {
+                    if (!roomCodeError) {
+                        viewModel.fetchGame(gameRoomCode = roomCode)
+                        navigateToGameRoomScreen()
+                    }
+                }
+            ) {
                 Text(text = "Submit")
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun JoinScreenPreview() {
-    ChallengewordgameTheme {
-        JoinScreen( {}, {} )
     }
 }

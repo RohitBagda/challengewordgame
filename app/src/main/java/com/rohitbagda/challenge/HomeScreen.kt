@@ -11,12 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.firebase.Firebase
+import com.google.firebase.database.database
 import com.rohitbagda.challenge.ui.theme.ChallengewordgameTheme
 
 @Composable
 fun HomeScreen(
     navigateToJoinScreen: () -> Unit,
-    navigateToGameRoomScreen: () -> Unit
+    navigateToGameRoomScreen: () -> Unit,
+    viewModel: ChallengeViewModel
 ) {
     Surface {
         Column(
@@ -24,7 +27,10 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Button(onClick = { navigateToGameRoomScreen() }) {
+            Button(onClick = {
+                viewModel.createNewGame()
+                navigateToGameRoomScreen()
+            }) {
                 Text(text = "Host")
             }
             Button(onClick = { navigateToJoinScreen() }) {
@@ -40,7 +46,8 @@ fun HomeScreenPreview() {
     ChallengewordgameTheme {
         HomeScreen(
             navigateToJoinScreen = {},
-            navigateToGameRoomScreen = {}
+            navigateToGameRoomScreen = {},
+            viewModel = ChallengeViewModel(Firebase.database)
         )
     }
 }
