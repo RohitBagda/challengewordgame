@@ -64,7 +64,8 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
 
     fun updateWord(gameRoomCode: String, newWord: String) {
         db.getReference(gameRoomCode).child("currentWord").setValue(newWord)
-        currentGame?.currentWord = newWord
+        // Copy forces a redraw of if the Game's inner properties change
+        currentGame = currentGame?.copy()
     }
 }
 
