@@ -15,6 +15,9 @@ import com.google.firebase.database.getValue
 class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     var currentGame: Game? by mutableStateOf(null)
 
+    fun getCurrentGameRoomCode() = currentGame?.roomCode
+    fun getCurrentWord() = currentGame?.currentWord
+
     fun createNewGame() {
         val game = Game(roomCode = GameRoomCodeGenerator.getCode(), currentWord = "")
         if (game.roomCode != null) {
@@ -61,12 +64,13 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
 
     fun updateWord(gameRoomCode: String, newWord: String) {
         db.getReference(gameRoomCode).child("currentWord").setValue(newWord)
+        currentGame?.currentWord = newWord
     }
 }
 
 data class Game(
     var roomCode: String? = null,
-    val currentWord: String? = null,
+    var currentWord: String? = null,
 )
 
 data class User(
