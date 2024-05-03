@@ -18,9 +18,15 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     var user: User? by mutableStateOf(null)
 
     fun getCurrentGameRoomCode() = currentGame?.roomCode
-    fun getCurrentWord() = currentGame?.currentWord
+    fun getCurrentGameWord() = currentGame?.currentWord
+    fun getCurrentGamePlayer() = currentGame?.currentPlayer
+    fun getCurrentGamePlayers() = currentGame?.players?.values?: emptyList()
+    fun getTurnQueue() = currentGame?.turnQueue
     fun getGameHost() = currentGame?.host
+    fun isUserHost() = user?.isHost == true
+    fun isUsersTurn() = user?.id == getCurrentGamePlayer()?.id
     fun isRoomLocked() = currentGame?.roomLocked
+    fun gameHasEnoughPlayers() = (currentGame?.players?.values?.size?: 0) > 1
 
 
     fun createNewGame() {
@@ -28,7 +34,8 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
         val game = Game(
             roomCode = GameRoomCodeGenerator.getCode(),
             currentWord = "",
-            host = user
+            host = user,
+            currentPlayer = null,
         )
         if (game.roomCode != null) {
             val ref = db.getReference(game.roomCode!!)
@@ -97,8 +104,22 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     }
 
     fun createTurnOrder(gameRoomCode: String) {
-        currentGame?.turnQueue?.addAll((currentGame?.players?.values?: emptyList()).shuffled())
+        currentGame?.turnQueue?.addAll((currentGame?.players?.values?: emptyList()))
+        currentGame?.turnQueue?.shuffle()
+        currentGame?.currentPlayer = currentGame?.turnQueue?.first()
         db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
+        db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
+        currentGame = currentGame?.copy()
+    }
+
+    fun updateTurnOrder(gameRoomCode: String, player: User) {
+        getTurnQueue()?.removeFirst()
+        getTurnQueue()?.add(player)
+        currentGame?.currentPlayer = getTurnQueue()?.first()
+        Log.i(ContentValues.TAG, "After Adding Player ${player.name}: currentPlayer = ${currentGame?.currentPlayer}, Turn Queue ${getTurnQueue()}")
+        db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
+        db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
+        currentGame = currentGame?.copy()
     }
 }
 
@@ -106,13 +127,14 @@ data class Game(
     var roomCode: String? = null,
     var roomLocked: Boolean? = false,
     var currentWord: String? = null,
+    var host: User? = null,
+    var currentPlayer: User? = null,
     var players: MutableMap<String, User> = HashMap(),
     var turnQueue: MutableList<User> = mutableListOf(),
-    var host: User? = null
 )
 
 data class User(
-    var id: String? = null,
-    var name: String? = null,
-    var isHost: Boolean? = null
+    val id: String? = null,
+    val name: String? = null,
+    val isHost: Boolean? = null
 )
