@@ -28,13 +28,9 @@ fun GameRoomScreen(
 ) {
     Column(Modifier.padding(30.dp)) {
         Text(text = viewModel.getCurrentGameRoomCode() ?: "")
-        Button( onClick = {}) {
-            Text(text = "Hello")
-        }
+        Text(text = "currentPlayers = ${viewModel.currentGame?.players?.values?.joinToString { it.name?: "" }}")
         Text(text = "currentWord = ${viewModel.currentGame?.currentWord?: ""}", color = Color.Black)
-        Button(onClick = { navigateToHomeScreen() }) {
-            Text(text = "End Session")
-        }
+        Button(onClick = { navigateToHomeScreen() }) { Text(text = "End Session") }
         OnScreenKeyboard {
             if (viewModel.getCurrentGameRoomCode() != null) {
                 viewModel.updateWord(

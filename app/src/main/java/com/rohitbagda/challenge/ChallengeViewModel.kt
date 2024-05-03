@@ -11,6 +11,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
+import java.util.UUID
 
 class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     var currentGame: Game? by mutableStateOf(null)
@@ -24,6 +25,10 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
             val ref = db.getReference(game.roomCode!!)
             ref.setValue(game)
             currentGame = game
+            addPlayer(
+                gameRoomCode = game.roomCode!!,
+                player = UserGenerator.generate(isHost = true)
+            )
             ref.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     // This method is called once with the initial value and again
@@ -62,19 +67,27 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
         })
     }
 
+    fun addPlayer(gameRoomCode: String, player: User)  {
+        db.getReference(gameRoomCode).child("players").child(UUID.randomUUID().toString()).setValue(player)
+        // Copy forces a redraw of if the Game's child properties change
+        currentGame = currentGame?.copy()
+    }
+
     fun updateWord(gameRoomCode: String, newWord: String) {
         db.getReference(gameRoomCode).child("currentWord").setValue(newWord)
-        // Copy forces a redraw of if the Game's inner properties change
+        // Copy forces a redraw of if the Game's child properties change
         currentGame = currentGame?.copy()
     }
 }
 
 data class Game(
     var roomCode: String? = null,
+    var roomLocked: Boolean? = null,
     var currentWord: String? = null,
+    var players: MutableMap<String, User> = HashMap()
 )
 
 data class User(
-    var id: String,
-    var name: String
+    var name: String? = null,
+    var isHost: Boolean? = null
 )

@@ -114,6 +114,7 @@ fun RoomCodeTextField(
                     if (!invalidRoomCode) {
                         roomExists = viewModel.currentGame != null
                         if (roomExists) {
+                            viewModel.addPlayer(gameRoomCode = roomCode, player = UserGenerator.generate(isHost = false))
                             navigateToGameRoomScreen()
                         }
                     }
