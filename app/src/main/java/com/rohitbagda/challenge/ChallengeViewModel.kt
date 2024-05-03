@@ -13,9 +13,13 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import java.util.UUID
 
-class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
+class ChallengeViewModel(
+    private val db: FirebaseDatabase,
+    private val notificationService: NotificationService,
+): ViewModel() {
     var currentGame: Game? by mutableStateOf(null)
     var user: User? by mutableStateOf(null)
+    var isAppInBackground: Boolean by mutableStateOf(false)
 
     fun getCurrentGameRoomCode() = currentGame?.roomCode
     fun getCurrentGameWord() = currentGame?.currentWord
@@ -50,6 +54,9 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
                     // whenever data at this location is updated.
                     val value = dataSnapshot.getValue<Game>()
                     currentGame = value
+                    if (isUsersTurn()) {
+                        notificationService.showTurnNotification()
+                    }
                     Log.d(ContentValues.TAG, "Value is: $value")
                 }
 
@@ -72,6 +79,9 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
                 // whenever data at this location is updated.
                 val value = dataSnapshot.getValue<Game>()
                 currentGame = value
+                if (isAppInBackground && currentGame?.roomLocked == true) {
+                    notificationService.showTurnNotification()
+                }
                 Log.d(ContentValues.TAG, "Value is: $value")
             }
 
@@ -92,8 +102,13 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
         user = player
     }
 
-    fun updateWord(gameRoomCode: String, newWord: String) {
+    fun updateWordAndTurn(gameRoomCode: String, newWord: String, player: User) {
         db.getReference(gameRoomCode).child("currentWord").setValue(newWord)
+        getTurnQueue()?.removeFirst()
+        getTurnQueue()?.add(player)
+        currentGame?.currentPlayer = getTurnQueue()?.first()
+        db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
+        db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
         // Copy forces a redraw of if the Game's child properties change
         currentGame = currentGame?.copy()
     }
@@ -108,16 +123,6 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
         currentGame?.turnQueue?.addAll((currentGame?.players?.values?: emptyList()))
         currentGame?.turnQueue?.shuffle()
         currentGame?.currentPlayer = currentGame?.turnQueue?.first()
-        db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
-        db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
-        currentGame = currentGame?.copy()
-    }
-
-    fun updateTurnOrder(gameRoomCode: String, player: User) {
-        getTurnQueue()?.removeFirst()
-        getTurnQueue()?.add(player)
-        currentGame?.currentPlayer = getTurnQueue()?.first()
-        Log.i(ContentValues.TAG, "After Adding Player ${player.name}: currentPlayer = ${currentGame?.currentPlayer}, Turn Queue ${getTurnQueue()}")
         db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
         db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
         currentGame = currentGame?.copy()

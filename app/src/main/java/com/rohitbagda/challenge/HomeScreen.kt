@@ -39,15 +39,3 @@ fun HomeScreen(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    ChallengewordgameTheme {
-        HomeScreen(
-            navigateToJoinScreen = {},
-            navigateToGameRoomScreen = {},
-            viewModel = ChallengeViewModel(Firebase.database)
-        )
-    }
-}

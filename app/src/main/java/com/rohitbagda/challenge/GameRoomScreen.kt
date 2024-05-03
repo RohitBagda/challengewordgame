@@ -47,12 +47,9 @@ fun GameRoomScreen(
             }
             OnScreenKeyboard {
                 if (viewModel.getCurrentGameRoomCode() != null && viewModel.isUsersTurn()) {
-                    viewModel.updateWord(
+                    viewModel.updateWordAndTurn(
                         gameRoomCode = viewModel.getCurrentGameRoomCode()!!,
-                        newWord = viewModel.getCurrentGameWord() + it
-                    )
-                    viewModel.updateTurnOrder(
-                        gameRoomCode = viewModel.getCurrentGameRoomCode()!!,
+                        newWord = viewModel.getCurrentGameWord() + it,
                         player = viewModel.user!!
                     )
                 }
