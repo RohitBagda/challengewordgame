@@ -15,20 +15,27 @@ import java.util.UUID
 
 class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     var currentGame: Game? by mutableStateOf(null)
+    var user: User? by mutableStateOf(null)
 
     fun getCurrentGameRoomCode() = currentGame?.roomCode
     fun getCurrentWord() = currentGame?.currentWord
+    fun getGameHost() = currentGame?.host
+    fun isRoomLocked() = currentGame?.roomLocked
+
 
     fun createNewGame() {
-        val game = Game(roomCode = GameRoomCodeGenerator.getCode(), currentWord = "")
+        val user = UserGenerator.generate(isHost = true)
+        val game = Game(
+            roomCode = GameRoomCodeGenerator.getCode(),
+            currentWord = "",
+            host = user
+        )
         if (game.roomCode != null) {
             val ref = db.getReference(game.roomCode!!)
             ref.setValue(game)
+            addPlayer(gameRoomCode = game.roomCode!!, player = user)
             currentGame = game
-            addPlayer(
-                gameRoomCode = game.roomCode!!,
-                player = UserGenerator.generate(isHost = true)
-            )
+            this.user = user
             ref.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     // This method is called once with the initial value and again
@@ -68,9 +75,13 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     }
 
     fun addPlayer(gameRoomCode: String, player: User)  {
-        db.getReference(gameRoomCode).child("players").child(UUID.randomUUID().toString()).setValue(player)
+        db.getReference(gameRoomCode)
+            .child("players")
+            .child(player.id?: UUID.randomUUID().toString())
+            .setValue(player)
         // Copy forces a redraw of if the Game's child properties change
         currentGame = currentGame?.copy()
+        user = player
     }
 
     fun updateWord(gameRoomCode: String, newWord: String) {
@@ -78,16 +89,30 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
         // Copy forces a redraw of if the Game's child properties change
         currentGame = currentGame?.copy()
     }
+
+    fun lockRoom(gameRoomCode: String) {
+        db.getReference(gameRoomCode).child("roomLocked").setValue(true)
+        // Copy forces a redraw of if the Game's child properties change
+        currentGame = currentGame?.copy()
+    }
+
+    fun createTurnOrder(gameRoomCode: String) {
+        currentGame?.turnQueue?.addAll((currentGame?.players?.values?: emptyList()).shuffled())
+        db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
+    }
 }
 
 data class Game(
     var roomCode: String? = null,
-    var roomLocked: Boolean? = null,
+    var roomLocked: Boolean? = false,
     var currentWord: String? = null,
-    var players: MutableMap<String, User> = HashMap()
+    var players: MutableMap<String, User> = HashMap(),
+    var turnQueue: MutableList<User> = mutableListOf(),
+    var host: User? = null
 )
 
 data class User(
+    var id: String? = null,
     var name: String? = null,
     var isHost: Boolean? = null
 )

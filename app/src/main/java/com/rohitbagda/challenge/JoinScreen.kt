@@ -113,7 +113,7 @@ fun RoomCodeTextField(
                 onClick = {
                     if (!invalidRoomCode) {
                         roomExists = viewModel.currentGame != null
-                        if (roomExists) {
+                        if (roomExists && viewModel.isRoomLocked() != true) {
                             viewModel.addPlayer(gameRoomCode = roomCode, player = UserGenerator.generate(isHost = false))
                             navigateToGameRoomScreen()
                         }
