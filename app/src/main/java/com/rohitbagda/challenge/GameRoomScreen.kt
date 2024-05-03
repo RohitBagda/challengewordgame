@@ -33,12 +33,14 @@ fun GameRoomScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(text = "roomCode = ${viewModel.getCurrentGameRoomCode()}")
-            Text(text = "username = ${viewModel.user?.name}")
+            Text(text = "username = ${viewModel.getUserName()}")
             Text(text = "host = ${viewModel.getGameHost()?.name}")
             Text(text = "playerList = ${viewModel.getCurrentGamePlayers().joinToString { it.name?: "" }}")
-            Text(text = "turnOrder = ${viewModel.getTurnQueue()?.asIterable()?.joinToString { it.name?: "" }}")
-            Text(text = "currentPlayer = ${viewModel.getCurrentGamePlayer()?.name}")
-            Text(text = "currentWord = ${viewModel.getCurrentGameWord()}")
+            if (viewModel.isRoomLocked() == true) {
+                Text(text = "turnOrder = ${viewModel.getTurnQueue()?.asIterable()?.joinToString { it.name?: "" }}")
+                Text(text = "currentPlayer = ${viewModel.getCurrentGamePlayer()?.name}")
+                Text(text = "currentWord = ${viewModel.getCurrentGameWord()}")
+            }
             when {
                 viewModel.isUserHost() -> ShowHostControls(viewModel, navigateToHomeScreen)
                 else -> ShowNonHostControls(navigateToHomeScreen)

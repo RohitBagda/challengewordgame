@@ -23,6 +23,7 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
     fun getCurrentGamePlayers() = currentGame?.players?.values?: emptyList()
     fun getTurnQueue() = currentGame?.turnQueue
     fun getGameHost() = currentGame?.host
+    fun getUserName() = user?.name
     fun isUserHost() = user?.isHost == true
     fun isUsersTurn() = user?.id == getCurrentGamePlayer()?.id
     fun isRoomLocked() = currentGame?.roomLocked
