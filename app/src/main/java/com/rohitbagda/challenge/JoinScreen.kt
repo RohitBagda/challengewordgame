@@ -51,7 +51,10 @@ fun RoomCodeTextField(
     var roomCode by remember { mutableStateOf("") }
     var invalidRoomCode by remember { mutableStateOf(false) }
     var roomExists by remember { mutableStateOf(true) }
-    fun validate(text: String) { invalidRoomCode = text.length != 6 }
+    fun validate(text: String) {
+        invalidRoomCode = text.length != 6
+        viewModel.loadGame(text)
+    }
 
     Column {
         TextField(
@@ -109,7 +112,6 @@ fun RoomCodeTextField(
             Button(
                 onClick = {
                     if (!invalidRoomCode) {
-                        viewModel.loadGame(gameRoomCode = roomCode)
                         roomExists = viewModel.currentGame != null
                         if (roomExists) {
                             navigateToGameRoomScreen()
