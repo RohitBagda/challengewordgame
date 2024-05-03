@@ -18,16 +18,14 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rohitbagda.challenge.ui.theme.ChallengewordgameTheme
 
 @Composable
 fun JoinScreen(
@@ -50,22 +48,22 @@ fun RoomCodeTextField(
     navigateBack: () -> Unit,
     viewModel: ChallengeViewModel
 ) {
-    var roomCode by rememberSaveable { mutableStateOf("rohit") }
-    var roomCodeError by rememberSaveable { mutableStateOf(false) }
-    fun validate(text: String) {
-        roomCodeError = text.length !in 4..12
-    }
+    var roomCode by remember { mutableStateOf("") }
+    var invalidRoomCode by remember { mutableStateOf(false) }
+    var roomExists by remember { mutableStateOf(true) }
+    fun validate(text: String) { invalidRoomCode = text.length != 6 }
 
     Column {
         TextField(
             value = roomCode,
             onValueChange = {
                 roomCode = it.uppercase()
+                roomExists = true
                 validate(roomCode)
             },
             modifier = Modifier.width(300.dp),
             supportingText = {
-                if (roomCodeError) {
+                if (invalidRoomCode) {
                     Text(text = "usernames can only be 4-12 charachters")
                 }
             },
@@ -81,7 +79,7 @@ fun RoomCodeTextField(
                 errorContainerColor = Color.Transparent,
             ),
             trailingIcon = @Composable {
-                if (roomCodeError) {
+                if (invalidRoomCode) {
                     IconButton(
                         onClick = { roomCode = "" },
                         content = @Composable { Icon(Icons.Outlined.Warning, "error", tint = MaterialTheme.colorScheme.error) }
@@ -97,17 +95,25 @@ fun RoomCodeTextField(
                 }
             },
             keyboardActions = KeyboardActions { validate(roomCode) },
-            isError = roomCodeError
+            isError = invalidRoomCode
         )
+
+        if (!roomExists) {
+            Text(text = "Room with code $roomCode does not exist!", color = Color.Red)
+        }
+
         Row {
             Button(onClick = { navigateBack() }) {
                 Text(text = "Back")
             }
             Button(
                 onClick = {
-                    if (!roomCodeError) {
-                        viewModel.fetchGame(gameRoomCode = roomCode)
-                        navigateToGameRoomScreen()
+                    if (!invalidRoomCode) {
+                        viewModel.loadGame(gameRoomCode = roomCode)
+                        roomExists = viewModel.currentGame != null
+                        if (roomExists) {
+                            navigateToGameRoomScreen()
+                        }
                     }
                 }
             ) {

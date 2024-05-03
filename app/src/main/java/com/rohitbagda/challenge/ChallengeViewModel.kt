@@ -41,7 +41,7 @@ class ChallengeViewModel(private val db: FirebaseDatabase): ViewModel() {
         }
     }
 
-    fun fetchGame(gameRoomCode: String) {
+    fun loadGame(gameRoomCode: String) {
         val ref = db.getReference(gameRoomCode)
         ref.get().addOnSuccessListener {
             currentGame = it.getValue<Game>()
