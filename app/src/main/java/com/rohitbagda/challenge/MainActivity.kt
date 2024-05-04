@@ -29,6 +29,9 @@ class MainActivity : ComponentActivity() {
         // Set up lifecycle observer
         val appLifecycleObserver = AppLifecycleObserver(viewModel)
         ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
+
+        val wordSearchService = WordSearchService()
+        wordSearchService.load(this)
         setContent {
 
             ChallengewordgameTheme {
@@ -58,7 +61,8 @@ class MainActivity : ComponentActivity() {
                     composable(route = Route.GAME_ROOM_SCREEN.value) {
                         GameRoomScreen(
                             navigateToHomeScreen = { navController.navigate(Route.HOME_SCREEN.value) },
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            wordSearchService = wordSearchService
                         )
                     }
                 }

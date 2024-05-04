@@ -11,8 +11,18 @@ class AppLifecycleObserver(private val viewModel: ChallengeViewModel) : DefaultL
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        viewModel.isAppInBackground = true
+        viewModel.isAppInBackground = false
         super.onStart(owner)
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        viewModel.isAppInBackground = false
+        super.onResume(owner)
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        viewModel.isAppInBackground = true
+        super.onResume(owner)
     }
 
     override fun onStop(owner: LifecycleOwner) {

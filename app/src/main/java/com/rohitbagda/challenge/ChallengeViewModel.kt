@@ -23,16 +23,18 @@ class ChallengeViewModel(
 
     fun getCurrentGameRoomCode() = currentGame?.roomCode
     fun getCurrentGameWord() = currentGame?.currentWord
+    private fun getCurrentGameWordLength() = currentGame?.currentWord?.length?: 0
     fun getCurrentGamePlayer() = currentGame?.currentPlayer
     fun getCurrentGamePlayers() = currentGame?.players?.values?: emptyList()
     fun getTurnQueue() = currentGame?.turnQueue
-    fun getGameHost() = currentGame?.host
     fun getUserName() = user?.name
     fun isUserHost() = user?.isHost == true
     fun isUsersTurn() = user?.id == getCurrentGamePlayer()?.id
-    fun isRoomLocked() = currentGame?.roomLocked
-    fun gameHasEnoughPlayers() = (currentGame?.players?.values?.size?: 0) > 1
+    fun hasStarted() = currentGame?.hasStarted
+    private fun hasEnded() = currentGame?.hasEnded
+    fun gameIsActive() = hasStarted() == true && hasEnded() == false
 
+    fun gameHasEnoughPlayers() = (currentGame?.players?.values?.size?: 0) > 1
 
     fun createNewGame() {
         val user = UserGenerator.generate(isHost = true)
@@ -48,48 +50,48 @@ class ChallengeViewModel(
             addPlayer(gameRoomCode = game.roomCode!!, player = user)
             currentGame = game
             this.user = user
-            ref.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    // This method is called once with the initial value and again
-                    // whenever data at this location is updated.
-                    val value = dataSnapshot.getValue<Game>()
-                    currentGame = value
-                    if (isUsersTurn()) {
-                        notificationService.showTurnNotification()
-                    }
-                    Log.d(ContentValues.TAG, "Value is: $value")
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Failed to read value
-                    Log.w(ContentValues.TAG, "Failed to read value.", error.toException())
-                }
-            })
+            ref.addValueEventListener(gameEventListener())
         }
     }
 
     fun loadGame(gameRoomCode: String) {
         val ref = db.getReference(gameRoomCode)
-        ref.get().addOnSuccessListener {
-            currentGame = it.getValue<Game>()
-        }
-        ref.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                val value = dataSnapshot.getValue<Game>()
-                currentGame = value
-                if (isAppInBackground && currentGame?.roomLocked == true) {
-                    notificationService.showTurnNotification()
-                }
-                Log.d(ContentValues.TAG, "Value is: $value")
-            }
+        ref.addValueEventListener(gameEventListener())
+    }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.w(ContentValues.TAG, "Failed to read value.", error.toException())
-            }
-        })
+    fun gameOver(gameRoomCode: String, wordSearchResult: WordSearchResult) {
+        currentGame?.hasEnded = true
+        db.getReference(gameRoomCode).child("hasEnded").setValue(true)
+        db.getReference(gameRoomCode).child("wordSearchResult").setValue(wordSearchResult)
+        currentGame =  currentGame?.copy()
+    }
+
+    fun endGame(gameRoomCode: String?) {
+        if (gameRoomCode != null) {
+            db.getReference(gameRoomCode).removeValue()
+            currentGame = null
+        }
+    }
+
+    private fun gameEventListener() = object : ValueEventListener {
+        override fun onDataChange(dataSnapshot: DataSnapshot) {
+            // This method is called once with the initial value and again
+            // whenever data at this location is updated.
+            val value = dataSnapshot.getValue<Game>()
+            currentGame = value
+            checkAndNotifyUserWhenOnBackground()
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            // Failed to read value
+            Log.w(ContentValues.TAG, "Failed to read value.", error.toException())
+        }
+    }
+
+    private fun checkAndNotifyUserWhenOnBackground() {
+        if (isAppInBackground && gameIsActive() && getCurrentGameWordLength() > 0) {
+            notificationService.showTurnNotification()
+        }
     }
 
     fun addPlayer(gameRoomCode: String, player: User)  {
@@ -103,12 +105,13 @@ class ChallengeViewModel(
     }
 
     fun updateWordAndTurn(gameRoomCode: String, newWord: String, player: User) {
-        db.getReference(gameRoomCode).child("currentWord").setValue(newWord)
+        val gameRef = db.getReference(gameRoomCode)
         getTurnQueue()?.removeFirst()
         getTurnQueue()?.add(player)
         currentGame?.currentPlayer = getTurnQueue()?.first()
-        db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
-        db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
+        gameRef.child("currentWord").setValue(newWord)
+        gameRef.child("turnQueue").setValue(currentGame?.turnQueue)
+        gameRef.child("currentPlayer").setValue(currentGame?.currentPlayer)
         // Copy forces a redraw of if the Game's child properties change
         currentGame = currentGame?.copy()
     }
@@ -123,6 +126,8 @@ class ChallengeViewModel(
         currentGame?.turnQueue?.addAll((currentGame?.players?.values?: emptyList()))
         currentGame?.turnQueue?.shuffle()
         currentGame?.currentPlayer = currentGame?.turnQueue?.first()
+        currentGame?.hasStarted = true
+        db.getReference(gameRoomCode).child("hasStarted").setValue(true)
         db.getReference(gameRoomCode).child("turnQueue").setValue(currentGame?.turnQueue)
         db.getReference(gameRoomCode).child("currentPlayer").setValue(currentGame?.currentPlayer)
         currentGame = currentGame?.copy()
@@ -131,12 +136,14 @@ class ChallengeViewModel(
 
 data class Game(
     var roomCode: String? = null,
-    var roomLocked: Boolean? = false,
+    var hasStarted: Boolean? = false,
+    var hasEnded: Boolean? = false,
     var currentWord: String? = null,
     var host: User? = null,
     var currentPlayer: User? = null,
     var players: MutableMap<String, User> = HashMap(),
     var turnQueue: MutableList<User> = mutableListOf(),
+    var wordSearchResult: WordSearchResult? = null,
 )
 
 data class User(
@@ -144,3 +151,15 @@ data class User(
     val name: String? = null,
     val isHost: Boolean? = null
 )
+
+data class WordSearchResult(
+    val result: String? = null,
+    val children: List<String> = mutableListOf()
+)
+
+object SearchResult {
+    const val DOES_NOT_EXIST = "DOES_NOT_EXIST"
+    const val HAS_NO_CHILDREN = "HAS_NO_CHILDREN"
+    const val HAS_NO_CHILDREN_NOT_YET_COMPLETE = "HAS_NO_CHILDREN_NOT_YET_COMPLETE"
+    const val HAS_CHILDREN = "HAS_CHILDREN"
+}
