@@ -1,13 +1,15 @@
 package com.rohitbagda.challenge
 
+import android.content.ContentValues
 import android.content.Context
+import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 
 class WordSearchService {
     companion object {
-        private val ALPHABETS_REGEX = "[a-z]".toRegex()
+        private val ALPHABETS_REGEX = "[a-z]+".toRegex()
     }
     val words: MutableList<String> = mutableListOf()
 
@@ -19,8 +21,10 @@ class WordSearchService {
         context.resources.openRawResource(resourceId).use { inputStream ->
             val reader = BufferedReader(InputStreamReader(inputStream))
             var word: String? = reader.readLine()
-            while (!word.isNullOrBlank() && word.matches(ALPHABETS_REGEX)) {
-                words.add(word.trim())
+            while (!word.isNullOrBlank()) {
+                if (word.matches(ALPHABETS_REGEX)) {
+                    words.add(word.trim())
+                }
                 word = reader.readLine()
             }
         }
@@ -28,6 +32,7 @@ class WordSearchService {
 
     fun wordCanBeContinued(word: String): WordSearchResult {
         val lowercaseWord = word.lowercase()
+        Log.i(ContentValues.TAG, "Word count: ${words.size}")
         val result = words.filter { it.startsWith(lowercaseWord) }
 
         if (result.isEmpty()) {

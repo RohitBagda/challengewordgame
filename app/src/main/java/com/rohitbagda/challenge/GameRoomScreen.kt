@@ -105,6 +105,10 @@ fun GameRoomScreen(
                 ControlsView(viewModel, navigateToHomeScreen)
             }
         }
+
+        if (viewModel.currentGame == null) {
+            navigateToHomeScreen()
+        }
     }
 }
 
