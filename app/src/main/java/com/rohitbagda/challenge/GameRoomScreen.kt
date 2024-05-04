@@ -44,161 +44,235 @@ fun GameRoomScreen(
         if (viewModel.currentGame == null) {
             navigateToHomeScreen()
         }
-
         if (viewModel.currentGame?.hasEnded != true) {
-            Column(
-                modifier = Modifier
-                    .padding(30.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
-            ) {
-                ChallengeTitleView()
-                Spacer(modifier = Modifier.height(60.dp))
-                Text(
-                    text = "Room Code",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                )
-                Text(
-                    text = viewModel.getCurrentGameRoomCode()?: "",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = TextUnit(30.0F, type = TextUnitType.Sp)
-                )
-                Text(
-                    text = if (viewModel.isUserHost()) "You are the Host!" else "Hosted by: ${viewModel.currentGame?.host?.name}",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                )
-                Text(
-                    text = "Your username",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 30.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                )
-                Text(
-                    text = viewModel.getUserName()?: "",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    fontSize = TextUnit(25.0F, type = TextUnitType.Sp)
-                )
-
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(30.dp)
-                ) {
-                    Text(
-                        text = "Players in room",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                    )
-                    viewModel.getCurrentGamePlayers().mapNotNull { it.name }.forEach {
-                        Text(
-                            text = it,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontSize = TextUnit(20.0F, type = TextUnitType.Sp)
-                        )
-                    }
-                }
-
-                if (viewModel.hasStarted() == true) {
-                    Text(
-                        text = "Turn",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                    )
-                    Text(
-                        text = if (viewModel.isUsersTurn()) "It's your turn!" else "${viewModel.currentGame?.currentPlayer?.name}'s turn!",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        fontSize = TextUnit(25.0F, type = TextUnitType.Sp)
-                    )
-                    Text(
-                        text = "Word",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 30.dp),
-                        textAlign = TextAlign.Center,
-                        fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                    )
-                    if (viewModel.getCurrentGameWord()?.length == 0 && viewModel.isUsersTurn()) {
-                        Text(
-                            text = "Choose a letter to start the game",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
-                        )
-                    }
-
-                    Text(
-                        text = viewModel.getCurrentGameWord()?: "",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        fontSize = TextUnit(25.0F, type = TextUnitType.Sp)
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 5.dp),
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    ControlsView(viewModel, navigateToHomeScreen)
-                    OnScreenKeyboard {
-                        if (viewModel.getCurrentGameRoomCode() != null && viewModel.isUsersTurn()) {
-                            val newWord = viewModel.getCurrentGameWord()!! + it
-                            if (viewModel.getCurrentGameWord() != null) {
-                                val searchResult = wordSearchService.wordCanBeContinued(newWord)
-                                if (searchResult.result != SearchResult.HAS_CHILDREN && searchResult.result != SearchResult.HAS_NO_CHILDREN_NOT_YET_COMPLETE) {
-                                    viewModel.gameOver(viewModel.getCurrentGameRoomCode()!!, searchResult)
-                                }
-                            }
-
-                            if (viewModel.currentGame?.hasEnded != true) {
-                                viewModel.updateWordAndTurn(
-                                    gameRoomCode = viewModel.getCurrentGameRoomCode()!!,
-                                    newWord = newWord,
-                                    player = viewModel.user!!
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            GameView(
+                viewModel = viewModel,
+                navigateToHomeScreen = navigateToHomeScreen,
+                wordSearchService = wordSearchService
+            )
         }
         if (viewModel.currentGame?.hasEnded == true) {
-            Column(
-                modifier = Modifier.padding(30.dp).fillMaxWidth(),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
-            ) {
-                ChallengeTitleView()
+            GameOverView(
+                viewModel = viewModel,
+                navigateToHomeScreen = navigateToHomeScreen
+            )
+        }
+    }
+}
+
+@Composable
+private fun GameView(
+    viewModel: ChallengeViewModel,
+    navigateToHomeScreen: () -> Unit,
+    wordSearchService: WordSearchService
+) {
+    Column(
+        modifier = Modifier
+            .padding(30.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
+    ) {
+        ChallengeTitleView()
+        Spacer(modifier = Modifier.height(60.dp))
+        Text(
+            text = "Room Code",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
+        )
+        Text(
+            text = viewModel.getCurrentGameRoomCode() ?: "",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(30.0F, type = TextUnitType.Sp)
+        )
+        Text(
+            text = if (viewModel.isUserHost()) "You are the Host!" else "Hosted by: ${viewModel.currentGame?.host?.name}",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
+        )
+        Text(
+            text = "Your username",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 30.dp),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
+        )
+        Text(
+            text = viewModel.getUserName() ?: "",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(25.0F, type = TextUnitType.Sp)
+        )
+
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()).padding(30.dp)
+        ) {
+            Text(
+                text = "Players in room",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
+            )
+            viewModel.getCurrentGamePlayers().mapNotNull { it.name }.forEach {
                 Text(
-                    text = "Game Over!",
-                    modifier = Modifier.fillMaxWidth().padding(),
+                    text = it,
+                    modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    fontSize = TextUnit(30.0F, type = TextUnitType.Sp)
+                    fontSize = TextUnit(20.0F, type = TextUnitType.Sp)
                 )
+            }
+        }
+
+        if (viewModel.hasStarted() == true) {
+            Text(
+                text = "Turn",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
+            )
+            Text(
+                text = if (viewModel.isUsersTurn()) "It's your turn!" else "${viewModel.currentGame?.currentPlayer?.name}'s turn!",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontSize = TextUnit(25.0F, type = TextUnitType.Sp)
+            )
+            Text(
+                text = "Word",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 30.dp),
+                textAlign = TextAlign.Center,
+                fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
+            )
+            if (viewModel.getCurrentGameWord()?.length == 0 && viewModel.isUsersTurn()) {
                 Text(
-                    text = "${viewModel.currentGame?.currentPlayer?.name} has lost",
-                    modifier = Modifier.fillMaxWidth().padding(),
+                    text = "Choose a letter to start the game",
+                    modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    fontSize = TextUnit(30.0F, type = TextUnitType.Sp)
+                    fontSize = TextUnit(15.0F, type = TextUnitType.Sp)
                 )
-                ControlsView(viewModel, navigateToHomeScreen)
+            }
+
+            Text(
+                text = viewModel.getCurrentGameWord() ?: "",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontSize = TextUnit(25.0F, type = TextUnitType.Sp)
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 5.dp),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            ControlsView(viewModel, navigateToHomeScreen)
+            OnScreenKeyboard {
+                onLetterTyped(
+                    viewModel = viewModel,
+                    key = it,
+                    wordSearchService = wordSearchService
+                )
             }
         }
     }
 }
+
+@Composable
+private fun GameOverView(
+    viewModel: ChallengeViewModel,
+    navigateToHomeScreen: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(30.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
+    ) {
+        ChallengeTitleView()
+        Text(
+            text = "Game Over!",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(30.0F, type = TextUnitType.Sp)
+        )
+        Text(
+            text = "${viewModel.currentGame?.currentPlayer?.name} has lost",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(30.0F, type = TextUnitType.Sp)
+        )
+        ControlsView(viewModel, navigateToHomeScreen)
+    }
+}
+
+private fun onLetterTyped(
+    viewModel: ChallengeViewModel,
+    key: Char,
+    wordSearchService: WordSearchService
+) {
+    if (viewModel.getCurrentGameRoomCode() != null && viewModel.isUsersTurn()) {
+        val newWord = viewModel.getCurrentGameWord()!! + key
+        if (viewModel.getCurrentGameWord() != null) {
+            val searchResult = wordSearchService.wordCanBeContinued(newWord)
+            if (searchResult.result != SearchResult.HAS_CHILDREN && searchResult.result != SearchResult.HAS_NO_CHILDREN_NOT_YET_COMPLETE) {
+                viewModel.gameOver(viewModel.getCurrentGameRoomCode()!!, searchResult)
+            }
+        }
+
+        if (viewModel.currentGame?.hasEnded != true) {
+            viewModel.updateWordAndTurn(
+                gameRoomCode = viewModel.getCurrentGameRoomCode()!!,
+                newWord = newWord,
+                player = viewModel.user!!
+            )
+        }
+    }
+}
+
+@Composable
+fun OnScreenKeyboard(onLetterTyped: (Char) -> Unit) {
+    // Display uppercase alphabet keys in a single row
+    setOf("QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM").forEach { keyboardRow ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            keyboardRow.forEach {
+                KeyboardKey(it) { letter ->
+                    onLetterTyped(letter)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun KeyboardKey(letter: Char, onClick: (Char) -> Unit) {
+    Box(
+        Modifier
+            .height(50.dp)
+            .width(35.dp)
+            .clip(RoundedCornerShape(10))
+            .clickable(onClick = { onClick(letter) }), Alignment.Center) {
+        Text(
+            modifier = Modifier,
+            text = letter.toString(),
+            color = Color.Black,
+            fontSize = 24.sp
+        )
+    }
+}
+
 
 @Composable
 private fun ControlsView(
@@ -206,35 +280,9 @@ private fun ControlsView(
     navigateToHomeScreen: () -> Unit
 ) {
     when {
-        viewModel.isUserHost() -> ShowHostControls(
-            viewModel = viewModel,
-            navigateToHomeScreen = navigateToHomeScreen
-        )
-
-        else -> ShowNonHostControls(
-            viewModel = viewModel,
-            navigateToHomeScreen = navigateToHomeScreen
-        )
+        viewModel.isUserHost() -> ShowHostControls(viewModel = viewModel, navigateToHomeScreen = navigateToHomeScreen)
+        else -> ShowNonHostControls(viewModel = viewModel, navigateToHomeScreen = navigateToHomeScreen)
     }
-}
-
-@Composable
-private fun ShowNonHostControls(viewModel: ChallengeViewModel, navigateToHomeScreen: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.Bottom
-    ) {
-        Button(onClick = {
-            viewModel.endGame(gameRoomCode = viewModel.getCurrentGameRoomCode())
-            navigateToHomeScreen()
-        }) {
-            Text(text = "End Game")
-        }
-    }
-
 }
 
 @Composable
@@ -269,41 +317,24 @@ private fun ShowHostControls(
             },
             modifier = Modifier.padding(10.dp)
         ) {
-            Text(text = if (viewModel.isUserHost()) "End Game" else "Exit Game")
+            Text(text = "End Game")
         }
     }
 }
 
 @Composable
-fun OnScreenKeyboard(onLetterTyped: (Char) -> Unit) {
-        // Display uppercase alphabet keys in a single row
-    setOf("QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM").forEach { keyboardRow ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            keyboardRow.forEach {
-                KeyboardKey(it) { letter ->
-                    onLetterTyped(letter)
-                }
-            }
+private fun ShowNonHostControls(viewModel: ChallengeViewModel, navigateToHomeScreen: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Button(onClick = {
+            viewModel.endGame(gameRoomCode = viewModel.getCurrentGameRoomCode())
+            navigateToHomeScreen()
+        }) {
+            Text(text = "End Game")
         }
     }
-}
 
-@Composable
-fun KeyboardKey(letter: Char, onClick: (Char) -> Unit) {
-    Box(
-        Modifier
-            .height(50.dp)
-            .width(35.dp)
-            .clip(RoundedCornerShape(10))
-            .clickable(onClick = { onClick(letter) }), Alignment.Center) {
-        Text(
-            modifier = Modifier,
-            text = letter.toString(),
-            color = Color.Black,
-            fontSize = 24.sp
-        )
-    }
 }
