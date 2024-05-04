@@ -1,7 +1,6 @@
 package com.rohitbagda.challenge
 
 import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 
 class AppLifecycleObserver(private val viewModel: ChallengeViewModel) : DefaultLifecycleObserver {
