@@ -26,6 +26,13 @@ Challenge is a multiplayer word game application built for Android powered by Go
   * Curious Cat Lost the game!
 * A good vocabulary helps as if you cannot choose a letter to force the game to continue
 
+## Why Google Firebase?
+Google Firebase offers 
+* Realtime Data Sync across multiple devices at the same time
+* No server side code / websockets were needed for realtime communication!
+* Easy Integration with Android, Apple and Web Apps and so it makes building the application for multiple platforms significantly easier. 
+* No need for a local database on the endpoint.
+
 ## Features and Limitations of current implementation:
 * Computer decides which word can be continued or not using a word list of ~70000 words sourced from [here.](https://websites.umich.edu/~jlawler/wordlist)
 * Host controls when the game has started.
