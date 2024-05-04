@@ -24,17 +24,19 @@ class ChallengeViewModel(
     fun getCurrentGameRoomCode() = currentGame?.roomCode
     fun getCurrentGameWord() = currentGame?.currentWord
     private fun getCurrentGameWordLength() = currentGame?.currentWord?.length?: 0
-    fun getCurrentGamePlayer() = currentGame?.currentPlayer
-    fun getCurrentGamePlayers() = currentGame?.players?.values?: emptyList()
-    fun getTurnQueue() = currentGame?.turnQueue
+    private fun getCurrentGamePlayer() = currentGame?.currentPlayer
+    fun getCurrentGamePlayers() = currentGame?.players?.values?.sortedByDescending { it.name } ?: emptyList()
+    private fun getTurnQueue() = currentGame?.turnQueue
     fun getUserName() = user?.name
     fun isUserHost() = user?.isHost == true
     fun isUsersTurn() = user?.id == getCurrentGamePlayer()?.id
     fun hasStarted() = currentGame?.hasStarted
     private fun hasEnded() = currentGame?.hasEnded
-    fun gameIsActive() = hasStarted() == true && hasEnded() == false
+    private fun gameIsActive() = hasStarted() == true && hasEnded() == false
 
     fun gameHasEnoughPlayers() = (currentGame?.players?.values?.size?: 0) > 1
+
+    fun isRoomFull() = (currentGame?.players?.size ?: 0) > 5
 
     fun createNewGame() {
         val user = UserGenerator.generate(isHost = true)

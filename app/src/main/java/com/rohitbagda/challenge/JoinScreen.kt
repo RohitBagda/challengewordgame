@@ -3,10 +3,11 @@ package com.rohitbagda.challenge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
@@ -18,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -65,68 +67,71 @@ fun JoinRoomView(
             viewModel.loadGame(text)
         }
     }
-
-    Column(
-        modifier = Modifier
-            .padding(30.dp)
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.Center
-    ) {
-        OutlinedTextField(
-            value = roomCode,
-            onValueChange = {
-                roomCode = it.uppercase()
-                roomExists = true
-                loadRoom(roomCode)
-            },
-            modifier = Modifier.fillMaxWidth().padding(),
-            supportingText = {
-                if (invalidRoomCode) {
-                    Text(text = "Game room code must have 6 alphanumeric characters")
-                }
-            },
-            textStyle = TextStyle(
-                textAlign = TextAlign.Left,
-                fontSize = 28.sp
-            ),
-            singleLine = true,
-            label = { Text(text = "Enter room code") },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent,
-            ),
-            trailingIcon = @Composable {
-                if (invalidRoomCode) {
-                    IconButton(
-                        onClick = { /* Do Nothing */ },
-                        content = @Composable { Icon(Icons.Outlined.Warning, "error", tint = MaterialTheme.colorScheme.error) }
-                    )
-                }
-            },
-            leadingIcon = @Composable {
-                if (roomCode.length > 1) {
-                    IconButton(
-                        onClick = { roomCode = "" },
-                        content = @Composable { Icon(Icons.Outlined.Clear, "clear") }
-                    )
-                }
-            },
-            keyboardActions = KeyboardActions { loadRoom(roomCode) },
-            isError = invalidRoomCode
-        )
-
-        if (!roomExists) {
-            Text(
-                modifier = Modifier.padding(),
-                text = "Room with code $roomCode does not exist!",
-                color = Color.Red
+    Column {
+        ChallengeTitleView()
+        Spacer(modifier = Modifier.height(60.dp))
+        Column(
+            modifier = Modifier
+                .padding()
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            OutlinedTextField(
+                value = roomCode,
+                onValueChange = {
+                    roomCode = it.uppercase()
+                    roomExists = true
+                    loadRoom(roomCode)
+                },
+                modifier = Modifier.fillMaxWidth(0.75f),
+                supportingText = {
+                    if (invalidRoomCode) {
+                        Text(text = "Game room code must have 6 alphanumeric characters")
+                    }
+                },
+                textStyle = TextStyle(
+                    textAlign = TextAlign.Left,
+                    fontSize = 28.sp
+                ),
+                singleLine = true,
+                label = { Text(text = "Enter room code") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                ),
+                leadingIcon = @Composable {
+                    if (invalidRoomCode) {
+                        IconButton(
+                            onClick = { /* Do Nothing */ },
+                            content = @Composable { Icon(Icons.Outlined.Warning, "error", tint = MaterialTheme.colorScheme.error) }
+                        )
+                    }
+                },
+                trailingIcon = @Composable {
+                    if (roomCode.length > 1) {
+                        IconButton(
+                            onClick = { roomCode = "" },
+                            content = @Composable { Icon(Icons.Outlined.Clear, "clear") }
+                        )
+                    }
+                },
+                keyboardActions = KeyboardActions { loadRoom(roomCode) },
+                isError = invalidRoomCode
             )
+
+            if (!roomExists) {
+                Text(
+                    modifier = Modifier.padding(),
+                    text = "Room with code $roomCode does not exist!",
+                    color = Color.Red
+                )
+            }
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             Button(
@@ -141,12 +146,13 @@ fun JoinRoomView(
                 onClick = {
                     if (!invalidRoomCode) {
                         roomExists = viewModel.currentGame != null
-                        if (roomExists && viewModel.hasStarted() != true) {
+                        if (roomExists && !viewModel.isRoomFull() && viewModel.hasStarted() != true) {
                             viewModel.addPlayer(gameRoomCode = roomCode, player = UserGenerator.generate(isHost = false))
                             navigateToGameRoomScreen()
                         }
                     }
                 },
+                enabled = roomCode.isNotBlank() && !invalidRoomCode,
                 modifier = Modifier.padding(10.dp),
             ) {
                 Text(text = "Submit")

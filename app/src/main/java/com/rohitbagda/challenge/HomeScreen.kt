@@ -28,21 +28,11 @@ fun HomeScreen(
 ) {
     Surface {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp)
-            ,
+            modifier = Modifier.fillMaxSize().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "CHALLENGE",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(30.dp),
-                textAlign = TextAlign.Center,
-                fontSize = TextUnit(40.0F, type = TextUnitType.Sp)
-            )
+            ChallengeTitleView()
             Button(
                 onClick = {
                     viewModel.createNewGame()
@@ -51,7 +41,11 @@ fun HomeScreen(
             ) {
                 Text(text = "Host")
             }
-            Button(onClick = { navigateToJoinScreen() }) {
+            Button(
+                onClick = {
+                    navigateToJoinScreen()
+                }
+            ) {
                 Text(text = "Join")
             }
         }
