@@ -1,8 +1,13 @@
 package com.rohitbagda.challenge
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
@@ -11,106 +16,147 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rohitbagda.challenge.ui.theme.ChallengewordgameTheme
 
 @Composable
 fun JoinScreen(
-    navigateToUsernameScreen: () -> Unit,
-    navigateBack: () -> Unit
+    navigateToGameRoomScreen: () -> Unit,
+    navigateBack: () -> Unit,
+    viewModel: ChallengeViewModel
 ) {
-    Surface {
-        RoomCodeTextField(
-            navigateToUsernameScreen = navigateToUsernameScreen,
-            navigateBack = navigateBack
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        JoinRoomView(
+            navigateToGameRoomScreen = navigateToGameRoomScreen,
+            navigateBack = navigateBack,
+            viewModel = viewModel
         )
     }
 }
 
 @Composable
-fun RoomCodeTextField(
-    navigateToUsernameScreen: () -> Unit,
-    navigateBack: () -> Unit
+fun JoinRoomView(
+    navigateToGameRoomScreen: () -> Unit,
+    navigateBack: () -> Unit,
+    viewModel: ChallengeViewModel
 ) {
-    var roomCode by rememberSaveable { mutableStateOf("rohit") }
-    var roomCodeError by rememberSaveable { mutableStateOf(false) }
-    fun validate(text: String) {
-        roomCodeError = text.length !in 4..12
+    var roomCode by remember { mutableStateOf("") }
+    var invalidRoomCode by remember { mutableStateOf(false) }
+    var roomExists by remember { mutableStateOf(true) }
+    fun loadRoom(text: String) {
+        invalidRoomCode = text.length != 6
+        if (!invalidRoomCode) {
+            viewModel.loadGame(text)
+        }
     }
-
     Column {
-        TextField(
-            value = roomCode,
-            onValueChange = {
-                roomCode = it.lowercase()
-                validate(roomCode)
-            },
-            modifier = Modifier.width(300.dp),
-            supportingText = {
-                if (roomCodeError) {
-                    Text(text = "usernames can only be 4-12 charachters")
-                }
-            },
-            textStyle = TextStyle(
-                textAlign = TextAlign.Left,
-                fontSize = 28.sp
-            ),
-            singleLine = true,
-            label = { Text(text = "Enter room code") },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent,
-            ),
-            trailingIcon = @Composable {
-                if (roomCodeError) {
-                    IconButton(
-                        onClick = { roomCode = "" },
-                        content = @Composable { Icon(Icons.Outlined.Warning, "error", tint = MaterialTheme.colorScheme.error) }
-                    )
-                }
-            },
-            leadingIcon = @Composable {
-                if (roomCode.length > 1) {
-                    IconButton(
-                        onClick = { roomCode = "" },
-                        content = @Composable { Icon(Icons.Outlined.Clear, "clear") }
-                    )
-                }
-            },
-            keyboardActions = KeyboardActions { validate(roomCode) },
-            isError = roomCodeError
-        )
-        Row {
-            Button(onClick = { navigateBack() }) {
+        ChallengeTitleView()
+        Spacer(modifier = Modifier.height(60.dp))
+        Column(
+            modifier = Modifier
+                .padding()
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            OutlinedTextField(
+                value = roomCode,
+                onValueChange = {
+                    roomCode = it.uppercase()
+                    roomExists = true
+                    loadRoom(roomCode)
+                },
+                modifier = Modifier.fillMaxWidth(0.75f),
+                supportingText = {
+                    if (invalidRoomCode) {
+                        Text(text = "Game room code must have 6 alphanumeric characters")
+                    }
+                },
+                textStyle = TextStyle(
+                    textAlign = TextAlign.Left,
+                    fontSize = 28.sp
+                ),
+                singleLine = true,
+                label = { Text(text = "Enter room code") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                ),
+                leadingIcon = @Composable {
+                    if (invalidRoomCode) {
+                        IconButton(
+                            onClick = { /* Do Nothing */ },
+                            content = @Composable { Icon(Icons.Outlined.Warning, "error", tint = MaterialTheme.colorScheme.error) }
+                        )
+                    }
+                },
+                trailingIcon = @Composable {
+                    if (roomCode.length > 1) {
+                        IconButton(
+                            onClick = { roomCode = "" },
+                            content = @Composable { Icon(Icons.Outlined.Clear, "clear") }
+                        )
+                    }
+                },
+                keyboardActions = KeyboardActions { loadRoom(roomCode) },
+                isError = invalidRoomCode
+            )
+
+            if (!roomExists) {
+                Text(
+                    modifier = Modifier.padding(),
+                    text = "Room with code $roomCode does not exist!",
+                    color = Color.Red
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
+                    navigateBack()
+                },
+                modifier = Modifier.padding(10.dp),
+            ) {
                 Text(text = "Back")
             }
-            Button(onClick = { if (!roomCodeError) navigateToUsernameScreen() }) {
+            Button(
+                onClick = {
+                    if (!invalidRoomCode) {
+                        roomExists = viewModel.currentGame != null
+                        if (roomExists && !viewModel.isRoomFull() && viewModel.hasStarted() != true) {
+                            viewModel.addPlayer(gameRoomCode = roomCode, player = UserGenerator.generate(isHost = false))
+                            navigateToGameRoomScreen()
+                        }
+                    }
+                },
+                enabled = roomCode.isNotBlank() && !invalidRoomCode,
+                modifier = Modifier.padding(10.dp),
+            ) {
                 Text(text = "Submit")
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun JoinScreenPreview() {
-    ChallengewordgameTheme {
-        JoinScreen( {}, {} )
     }
 }

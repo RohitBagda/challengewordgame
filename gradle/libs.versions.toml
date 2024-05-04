@@ -12,6 +12,8 @@ googleServices = "4.4.1"
 firebaseBom = "32.8.1"
 firebaseDatabase = "20.3.1"
 navigationCompose = "2.7.7"
+lifecycleProcess = "2.7.0"
+accompanist-permissions = "0.31.1-alpha"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,7 +33,8 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase"}
-
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+acommpanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist-permissions"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
